@@ -397,21 +397,30 @@ HRESULT InitDevice()
     if( FAILED( hr ) )
         return hr;
 
+    const int numOfSides = 6;
+    float r = 2.0f * 3.14f / static_cast<float>(numOfSides);
+
     // Create vertex buffer
-    SimpleVertex vertices[] =
-    {
-        { XMFLOAT3( -1.0f, 1.0f, -1.0f ), XMFLOAT4( 0.0f, 0.0f, 1.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, -1.0f ), XMFLOAT4( 0.0f, 1.0f, 0.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, 1.0f, 1.0f ), XMFLOAT4( 0.0f, 1.0f, 1.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, 1.0f, 1.0f ), XMFLOAT4( 1.0f, 0.0f, 0.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, -1.0f, -1.0f ), XMFLOAT4( 1.0f, 0.0f, 1.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, -1.0f ), XMFLOAT4( 1.0f, 1.0f, 0.0f, 1.0f ) },
-        { XMFLOAT3( 1.0f, -1.0f, 1.0f ), XMFLOAT4( 1.0f, 1.0f, 1.0f, 1.0f ) },
-        { XMFLOAT3( -1.0f, -1.0f, 1.0f ), XMFLOAT4( 0.0f, 0.0f, 0.0f, 1.0f ) },
-    };
+    SimpleVertex vertices[(numOfSides * 2) + 2];
+    vertices[0] = { XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+    
+    for (int i = 0; static_cast<int>(i) < numOfSides; i++) {
+        float x = cosf(i * r);
+        float z = sinf(i * r);
+        vertices[i + 1] = { XMFLOAT3(x, 1, z), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+    }
+
+    vertices[numOfSides + 1] = { XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+
+    for (int i = 0; static_cast<int>(i) < numOfSides; i++) {
+        float x = cosf(i * r);
+        float z = sinf(i * r);
+        vertices[i + numOfSides + 2] = { XMFLOAT3(x, -1, z), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+    }
+
     D3D11_BUFFER_DESC bd = {};
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( SimpleVertex ) * 8;
+    bd.ByteWidth = sizeof( SimpleVertex ) * ((numOfSides * 2) + 2);
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
@@ -429,26 +438,40 @@ HRESULT InitDevice()
     // Create index buffer
     WORD indices[] =
     {
-        3,1,0,
-        2,1,3,
+        0,1,2,
+        0,2,3,
+        0,3,4,
+        0,4,5,
+        0,5,6,
+        0,6,1,
 
-        0,5,4,
-        1,5,0,
+        7,8,9,
+        7,9,10,
+        7,10,11,
+        7,11,12,
+        7,12,13,
+        7,13,8,
 
-        3,4,7,
-        0,4,3,
+        8,1,9,
+        1,2,9,
 
-        1,6,5,
-        2,6,1,
+        9,2,10,
+        2,3,10,
 
-        2,7,6,
-        3,7,2,
+        10,3,11,
+        3,4,11,
 
-        6,4,5,
-        7,4,6,
+        11,4,12,
+        4,5,12,
+
+        12,5,13,
+        5,6,13,
+
+        13,6,8,
+        6,8,1
     };
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( WORD ) * 36;        // 36 vertices needed for 12 triangles in a triangle list
+    bd.ByteWidth = sizeof(WORD) * 72 ;        // 36 vertices needed for 12 triangles in a triangle list
     bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd.CPUAccessFlags = 0;
     InitData.pSysMem = indices;
@@ -575,7 +598,7 @@ void Render()
     //
     // Animate the cube
     //
-	g_World = XMMatrixRotationY( t );
+	g_World = XMMatrixRotationY( 0.25f );
 
     //
     // Clear the back buffer
@@ -597,7 +620,7 @@ void Render()
 	g_pImmediateContext->VSSetShader( g_pVertexShader, nullptr, 0 );
 	g_pImmediateContext->VSSetConstantBuffers( 0, 1, &g_pConstantBuffer );
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
-	g_pImmediateContext->DrawIndexed( 36, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
+	g_pImmediateContext->DrawIndexed( 72, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
 
     //
     // Present our back buffer to our front buffer
