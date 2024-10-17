@@ -66,6 +66,10 @@ XMMATRIX                g_View;
 XMMATRIX                g_Projection;
 
 
+const int               g_gridSize = 125;
+const int               g_numIndices = (g_gridSize - 1) * (g_gridSize * 2) + (g_gridSize - 2);
+
+
 //--------------------------------------------------------------------------------------
 // Forward declarations
 //--------------------------------------------------------------------------------------
@@ -397,30 +401,20 @@ HRESULT InitDevice()
     if( FAILED( hr ) )
         return hr;
 
-    const int numOfSides = 6;
-    float r = 2.0f * 3.14f / static_cast<float>(numOfSides);
-
     // Create vertex buffer
-    SimpleVertex vertices[(numOfSides * 2) + 2];
-    vertices[0] = { XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
-    
-    for (int i = 0; static_cast<int>(i) < numOfSides; i++) {
-        float x = cosf(i * r);
-        float z = sinf(i * r);
-        vertices[i + 1] = { XMFLOAT3(x, 1, z), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
-    }
+    SimpleVertex vertices[(g_gridSize * g_gridSize)];
 
-    vertices[numOfSides + 1] = { XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+    for (auto z = 0; z < g_gridSize; z++) {
+		for (auto x = 0; x < g_gridSize; x++) {
 
-    for (int i = 0; static_cast<int>(i) < numOfSides; i++) {
-        float x = cosf(i * r);
-        float z = sinf(i * r);
-        vertices[i + numOfSides + 2] = { XMFLOAT3(x, -1, z), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+			vertices[(z * g_gridSize) + x].Pos = XMFLOAT3((x / 2.5f) - ((g_gridSize / 2.0f) / 2.5f), 0.0f, (z / 2.5f) - ((g_gridSize / 2.0f) / 2.5f));
+			vertices[(z * g_gridSize) + x].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+		}
     }
 
     D3D11_BUFFER_DESC bd = {};
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( SimpleVertex ) * ((numOfSides * 2) + 2);
+    bd.ByteWidth = sizeof( SimpleVertex ) * ((g_gridSize * g_gridSize));
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
@@ -435,43 +429,23 @@ HRESULT InitDevice()
     UINT offset = 0;
     g_pImmediateContext->IASetVertexBuffers( 0, 1, &g_pVertexBuffer, &stride, &offset );
 
+
     // Create index buffer
-    WORD indices[] =
-    {
-        0,1,2,
-        0,2,3,
-        0,3,4,
-        0,4,5,
-        0,5,6,
-        0,6,1,
+    WORD indices[g_numIndices];
 
-        7,8,9,
-        7,9,10,
-        7,10,11,
-        7,11,12,
-        7,12,13,
-        7,13,8,
+    //creates the indices for the grid using triangle strips
+    int index = 0;
+    for (int z = 0; z < g_gridSize - 1; z++) {
+        for (int x = 0; x < g_gridSize; x++) {
+            indices[index++] = ((z + 1) * g_gridSize) + x;
+			indices[index++] = (z * g_gridSize) + x;
+        }
+		if(z < g_gridSize - 2)
+            indices[index++] = -1;
+    }
 
-        8,1,9,
-        1,2,9,
-
-        9,2,10,
-        2,3,10,
-
-        10,3,11,
-        3,4,11,
-
-        11,4,12,
-        4,5,12,
-
-        12,5,13,
-        5,6,13,
-
-        13,6,8,
-        6,8,1
-    };
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(WORD) * 72 ;        // 36 vertices needed for 12 triangles in a triangle list
+    bd.ByteWidth = sizeof(WORD) * g_numIndices ;        // 36 vertices needed for 12 triangles in a triangle list
     bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	bd.CPUAccessFlags = 0;
     InitData.pSysMem = indices;
@@ -483,7 +457,7 @@ HRESULT InitDevice()
     g_pImmediateContext->IASetIndexBuffer( g_pIndexBuffer, DXGI_FORMAT_R16_UINT, 0 );
 
     // Set primitive topology
-    g_pImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+    g_pImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );
 
 	// Create the constant buffer
 	bd.Usage = D3D11_USAGE_DEFAULT;
@@ -495,7 +469,7 @@ HRESULT InitDevice()
         return hr;
 
     D3D11_RASTERIZER_DESC rasterDesc;
-    rasterDesc.CullMode = D3D11_CULL_NONE;
+    rasterDesc.CullMode = D3D11_CULL_BACK;
     rasterDesc.FillMode = D3D11_FILL_WIREFRAME;
     rasterDesc.ScissorEnable = false;
     rasterDesc.DepthBias = 0;
@@ -510,8 +484,8 @@ HRESULT InitDevice()
 	g_World = XMMatrixIdentity();
 
     // Initialize the view matrix
-	XMVECTOR Eye = XMVectorSet( 0.0f, 2.5f, -5.0f, 0.0f );
-	XMVECTOR At = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
+	XMVECTOR Eye = XMVectorSet( 0.0f, 10.0f, -25.0f, 0.0f );
+	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
 	XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
 	g_View = XMMatrixLookAtLH( Eye, At, Up );
 
@@ -620,7 +594,7 @@ void Render()
 	g_pImmediateContext->VSSetShader( g_pVertexShader, nullptr, 0 );
 	g_pImmediateContext->VSSetConstantBuffers( 0, 1, &g_pConstantBuffer );
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
-	g_pImmediateContext->DrawIndexed( 72, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
+	g_pImmediateContext->DrawIndexed( g_numIndices, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
 
     //
     // Present our back buffer to our front buffer
