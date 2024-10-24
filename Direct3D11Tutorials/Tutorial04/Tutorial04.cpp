@@ -482,7 +482,7 @@ HRESULT InitDevice()
 	g_World = XMMatrixIdentity();
 
     // Initialize the view matrix
-	XMVECTOR Eye = XMVectorSet( 0.0f, 2.5f, 5.0f, 0.0f );
+	XMVECTOR Eye = XMVectorSet( 0.0f, 5.0f, 10.0f, 0.0f );
 	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
 	XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
 	g_View = XMMatrixLookAtLH( Eye, At, Up );
@@ -572,10 +572,9 @@ void Render()
     //
     g_World = XMMatrixIdentity();
 
-	XMMATRIX mSpin = XMMatrixRotationY(t);
-	XMMATRIX mTranslate = XMMatrixTranslation(1.5f, 0.0f, 0.0f);
-	XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
-	g_World *= mScale * mTranslate * mSpin * XMMatrixTranslation(2.0f, 0.0f, 0.0f);
+	XMMATRIX mSpin = XMMatrixRotationY(t/6);
+	XMMATRIX mTranslate = XMMatrixTranslation(0.0f, 0.0f, 0.0f);
+	XMMATRIX mScale = XMMatrixScaling(1.0f, 1.0f, 1.0f);
 
     //
     // Clear the back buffer
@@ -586,7 +585,7 @@ void Render()
     // Update variables
     //
     ConstantBuffer cb;
-	cb.mWorld = XMMatrixTranspose( g_World );
+	cb.mWorld = XMMatrixTranspose( g_World * mScale * mTranslate * mSpin );
 	cb.mView = XMMatrixTranspose( g_View );
 	cb.mProjection = XMMatrixTranspose( g_Projection );
 	g_pImmediateContext->UpdateSubresource( g_pConstantBuffer, 0, nullptr, &cb, 0, 0 );
@@ -599,12 +598,24 @@ void Render()
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
 	g_pImmediateContext->DrawIndexed( 36, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
 
-	g_World = XMMatrixIdentity();
-	g_World *= XMMatrixScaling(0.25f, 2.5f, 0.25f);
-    g_World *= XMMatrixTranslation(2.0f, 0.0f, 0.0f);
-    cb.mWorld = XMMatrixTranspose(g_World);
+    g_World = XMMatrixIdentity();
+	mSpin = XMMatrixRotationY(t/3);
+	mTranslate = XMMatrixTranslation(5.0f, 0.0f, 0.0f);
+	mScale = XMMatrixScaling(0.25f, 0.25f, 0.25f);
+
+	cb.mWorld = XMMatrixTranspose(g_World * mScale * mTranslate * mSpin);
     g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb, 0, 0);
-	g_pImmediateContext->DrawIndexed( 36, 0, 0 );    
+    g_pImmediateContext->DrawIndexed(36, 0, 0);
+
+
+    g_World = XMMatrixIdentity();
+    mSpin = XMMatrixRotationY(t);
+    mTranslate = XMMatrixTranslation(1.0f, 0.0f, 0.0f);
+    mScale = XMMatrixScaling(0.1f, 0.1f, 0.1f);
+
+    cb.mWorld = XMMatrixTranspose(g_World * mScale * mTranslate * mSpin * XMMatrixTranslation(5.0f, 0.0f, 0.0f) *XMMatrixRotationY(t / 3));
+    g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb, 0, 0);
+    g_pImmediateContext->DrawIndexed(36, 0, 0);
 
     //
     // Present our back buffer to our front buffer
