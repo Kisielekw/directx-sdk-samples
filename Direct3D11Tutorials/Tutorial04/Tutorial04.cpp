@@ -485,7 +485,7 @@ HRESULT InitDevice()
 	XMVECTOR Eye = XMVectorSet( 0.0f, 5.0f, 10.0f, 0.0f );
 	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
 	XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
-	g_View = XMMatrixLookAtLH( Eye, At, Up );
+    g_View = XMMatrixLookAtLH( Eye, At, Up );
 
     // Initialize the projection matrix
 	g_Projection = XMMatrixPerspectiveFovLH( XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f );
@@ -603,7 +603,7 @@ void Render()
 	mTranslate = XMMatrixTranslation(5.0f, 0.0f, 0.0f);
 	mScale = XMMatrixScaling(0.25f, 0.25f, 0.25f);
 
-	cb.mWorld = XMMatrixTranspose(g_World * mScale * mTranslate * mSpin);
+	cb.mWorld = XMMatrixTranspose(g_World * mScale * XMMatrixRotationY(-t * 2 / 3) * mTranslate * mSpin);
     g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb, 0, 0);
     g_pImmediateContext->DrawIndexed(36, 0, 0);
 
@@ -613,7 +613,7 @@ void Render()
     mTranslate = XMMatrixTranslation(1.0f, 0.0f, 0.0f);
     mScale = XMMatrixScaling(0.1f, 0.1f, 0.1f);
 
-    cb.mWorld = XMMatrixTranspose(g_World * mScale * mTranslate * mSpin * XMMatrixTranslation(5.0f, 0.0f, 0.0f) *XMMatrixRotationY(t / 3));
+    cb.mWorld = XMMatrixTranspose(g_World * mScale * XMMatrixRotationY(t) * mTranslate * mSpin * XMMatrixTranslation(5.0f, 0.0f, 0.0f) * XMMatrixRotationY(t / 3));
     g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb, 0, 0);
     g_pImmediateContext->DrawIndexed(36, 0, 0);
 
