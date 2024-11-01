@@ -56,7 +56,13 @@ IDXGISwapChain*         g_pSwapChain = nullptr;
 IDXGISwapChain1*        g_pSwapChain1 = nullptr;
 ID3D11RenderTargetView* g_pRenderTargetView = nullptr;
 ID3D11VertexShader*     g_pVertexShader = nullptr;
+ID3D11VertexShader*     g_pVertexShader1 = nullptr;
+ID3D11VertexShader*     g_pVertexShader2 = nullptr;
+ID3D11VertexShader*     g_pVertexShader3 = nullptr;
 ID3D11PixelShader*      g_pPixelShader = nullptr;
+ID3D11PixelShader*      g_pPixelShader1 = nullptr;
+ID3D11PixelShader*      g_pPixelShader2 = nullptr;
+ID3D11PixelShader*      g_pPixelShader3 = nullptr;
 ID3D11InputLayout*      g_pVertexLayout = nullptr;
 ID3D11Buffer*           g_pVertexBuffer = nullptr;
 ID3D11Buffer*           g_pIndexBuffer = nullptr;
@@ -363,6 +369,54 @@ HRESULT InitDevice()
         return hr;
 	}
 
+    hr = CompileShaderFromFile(L"Tutorial04.fxh", "VS_Room", "vs_4_0", &pVSBlob);
+    if (FAILED(hr))
+    {
+        MessageBox(nullptr,
+            L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+        return hr;
+    }
+
+    // Create the vertex shader
+    hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &g_pVertexShader1);
+    if (FAILED(hr))
+    {
+        pVSBlob->Release();
+        return hr;
+    }
+
+    hr = CompileShaderFromFile(L"Tutorial04.fxh", "VS_Small", "vs_4_0", &pVSBlob);
+    if (FAILED(hr))
+    {
+        MessageBox(nullptr,
+            L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+        return hr;
+    }
+
+    // Create the vertex shader
+    hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &g_pVertexShader2);
+    if (FAILED(hr))
+    {
+        pVSBlob->Release();
+        return hr;
+    }
+
+    hr = CompileShaderFromFile(L"Tutorial04.fxh", "VS_Large", "vs_4_0", &pVSBlob);
+    if (FAILED(hr))
+    {
+        MessageBox(nullptr,
+            L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+        return hr;
+    }
+
+    // Create the vertex shader
+    hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &g_pVertexShader3);
+    if (FAILED(hr))
+    {
+        pVSBlob->Release();
+        return hr;
+    }
+
     // Define the input layout
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
@@ -395,6 +449,48 @@ HRESULT InitDevice()
 	hr = g_pd3dDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShader );
 	pPSBlob->Release();
     if( FAILED( hr ) )
+        return hr;
+
+    hr = CompileShaderFromFile(L"Tutorial04.fxh", "PS1", "ps_4_0", &pPSBlob);
+    if (FAILED(hr))
+    {
+        MessageBox(nullptr,
+            L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+        return hr;
+    }
+
+    // Create the pixel shader
+    hr = g_pd3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShader1);
+    pPSBlob->Release();
+    if (FAILED(hr))
+        return hr;
+
+    hr = CompileShaderFromFile(L"Tutorial04.fxh", "PS2", "ps_4_0", &pPSBlob);
+    if (FAILED(hr))
+    {
+        MessageBox(nullptr,
+            L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+        return hr;
+    }
+
+    // Create the pixel shader
+    hr = g_pd3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShader2);
+    pPSBlob->Release();
+    if (FAILED(hr))
+        return hr;
+
+    hr = CompileShaderFromFile(L"Tutorial04.fxh", "PS3", "ps_4_0", &pPSBlob);
+    if (FAILED(hr))
+    {
+        MessageBox(nullptr,
+            L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+        return hr;
+    }
+
+    // Create the pixel shader
+    hr = g_pd3dDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShader3);
+    pPSBlob->Release();
+    if (FAILED(hr))
         return hr;
 
     // Create vertex buffer
@@ -467,7 +563,7 @@ HRESULT InitDevice()
         return hr;
 
     D3D11_RASTERIZER_DESC rasterDesc;
-    rasterDesc.CullMode = D3D11_CULL_BACK;
+    rasterDesc.CullMode = D3D11_CULL_NONE;
     rasterDesc.FillMode = D3D11_FILL_SOLID;
     rasterDesc.ScissorEnable = false;
     rasterDesc.DepthBias = 0;
@@ -482,10 +578,10 @@ HRESULT InitDevice()
 	g_World = XMMatrixIdentity();
 
     // Initialize the view matrix
-	XMVECTOR Eye = XMVectorSet( 0.0f, 2.5f, 10.0f, 0.0f );
+	XMVECTOR Eye = XMVectorSet( 0.0f, 1.0f, -4.0f, 0.0f );
 	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
 	XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
-	g_View = XMMatrixLookAtLH( Eye, At, Up );
+    g_View = XMMatrixLookAtLH( Eye, At, Up );
 
     // Initialize the projection matrix
 	g_Projection = XMMatrixPerspectiveFovLH( XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f );
@@ -506,7 +602,13 @@ void CleanupDevice()
     if( g_pIndexBuffer ) g_pIndexBuffer->Release();
     if( g_pVertexLayout ) g_pVertexLayout->Release();
     if( g_pVertexShader ) g_pVertexShader->Release();
+    if( g_pVertexShader1 ) g_pVertexShader1->Release();
+    if( g_pVertexShader2 ) g_pVertexShader2->Release();
+    if( g_pVertexShader3 ) g_pVertexShader3->Release();
     if( g_pPixelShader ) g_pPixelShader->Release();
+    if( g_pPixelShader1 ) g_pPixelShader1->Release();
+    if( g_pPixelShader2 ) g_pPixelShader2->Release();
+    if( g_pPixelShader3 ) g_pPixelShader3->Release();
     if( g_pRenderTargetView ) g_pRenderTargetView->Release();
     if( g_pSwapChain1 ) g_pSwapChain1->Release();
     if( g_pSwapChain ) g_pSwapChain->Release();
@@ -589,10 +691,20 @@ void Render()
     //
     // Renders a triangle
     //
-	g_pImmediateContext->VSSetShader( g_pVertexShader, nullptr, 0 );
+	g_pImmediateContext->VSSetShader( g_pVertexShader1, nullptr, 0 );
 	g_pImmediateContext->VSSetConstantBuffers( 0, 1, &g_pConstantBuffer );
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
 	g_pImmediateContext->DrawIndexed( 36, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
+
+    g_pImmediateContext->VSSetShader(g_pVertexShader3, nullptr, 0);
+    g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+    g_pImmediateContext->PSSetShader(g_pPixelShader1, nullptr, 0);
+    g_pImmediateContext->DrawIndexed(36, 0, 0);
+
+    g_pImmediateContext->VSSetShader(g_pVertexShader2, nullptr, 0);
+    g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+    g_pImmediateContext->PSSetShader(g_pPixelShader2, nullptr, 0);
+    g_pImmediateContext->DrawIndexed(36, 0, 0);
 
     //
     // Present our back buffer to our front buffer
