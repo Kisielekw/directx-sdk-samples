@@ -13,6 +13,7 @@ cbuffer ConstantBuffer : register( b0 )
 	matrix World;
 	matrix View;
 	matrix Projection;
+	float4 lightPos;
 }
 
 //--------------------------------------------------------------------------------------
@@ -25,7 +26,7 @@ struct VS_OUTPUT
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
-VS_OUTPUT VS_main( float4 Pos : POSITION, float4 Color : COLOR )
+VS_OUTPUT VS( float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal )
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
     output.Pos = mul( Pos, World );
@@ -35,7 +36,26 @@ VS_OUTPUT VS_main( float4 Pos : POSITION, float4 Color : COLOR )
     return output;
 }
 
-VS_OUTPUT VS_main(float4 Pos : POSITION, float4 Color : COLOR)
+VS_OUTPUT VS_Light(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal)
+{
+    VS_OUTPUT output = (VS_OUTPUT)0;
+
+    float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
+    float4 materialDiff = Color;
+    float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
+    float3 lightDir = normalize(lightPos.xyz - Pos.xyz);
+    float3 normal = mul(normalize(Normal.xyz), World);
+    float diff = max(0.0, dot(lightDir, normal));
+
+    output.Pos = mul(Pos, World);
+    output.Pos = mul(output.Pos, View);
+    output.Pos = mul(output.Pos, Projection);
+
+    output.Color = (materialAmbient + diff * materialDiff) * lightCol;
+    return output;
+}
+
+VS_OUTPUT VS_main(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal )
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
 
@@ -75,7 +95,7 @@ VS_OUTPUT VS_main(float4 Pos : POSITION, float4 Color : COLOR)
     return output;
 }
 
-VS_OUTPUT VS_Room(float4 Pos : POSITION, float4 Color : COLOR)
+VS_OUTPUT VS_Room(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal )
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
     
@@ -118,7 +138,7 @@ VS_OUTPUT VS_Room(float4 Pos : POSITION, float4 Color : COLOR)
     return output;
 }
 
-VS_OUTPUT VS_Small(float4 Pos : POSITION, float4 Color : COLOR)
+VS_OUTPUT VS_Small(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal )
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
     
@@ -161,7 +181,7 @@ VS_OUTPUT VS_Small(float4 Pos : POSITION, float4 Color : COLOR)
     return output;
 }
 
-VS_OUTPUT VS_Large(float4 Pos : POSITION, float4 Color : COLOR)
+VS_OUTPUT VS_Large(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal )
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
     
