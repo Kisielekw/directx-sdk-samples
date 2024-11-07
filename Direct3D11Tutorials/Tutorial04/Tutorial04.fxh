@@ -39,15 +39,16 @@ VS_OUTPUT VS( float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Norma
 VS_OUTPUT VS_Light(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal)
 {
     VS_OUTPUT output = (VS_OUTPUT)0;
+    
+    output.Pos = mul(Pos, World);
 
     float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
     float4 materialDiff = Color;
     float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
-    float3 lightDir = normalize(lightPos.xyz - Pos.xyz);
-    float3 normal = mul(normalize(Normal.xyz), World);
+    float3 lightDir = normalize(lightPos.xyz - output.Pos.xyz);
+    float3 normal = normalize(mul(Normal.xyz, World));
     float diff = max(0.0, dot(lightDir, normal));
 
-    output.Pos = mul(Pos, World);
     output.Pos = mul(output.Pos, View);
     output.Pos = mul(output.Pos, Projection);
 

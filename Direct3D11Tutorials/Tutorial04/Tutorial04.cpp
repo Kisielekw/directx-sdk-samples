@@ -71,11 +71,11 @@ ID3D11Buffer*           g_pVertexBuffer = nullptr;
 ID3D11Buffer*           g_pIndexBuffer = nullptr;
 ID3D11Buffer*           g_pConstantBuffer = nullptr;
 ID3D11Texture2D*        g_pDepthStencil = nullptr;
-ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
+ID3D11DepthStencilView*  g_pDepthStencilView = nullptr;
 XMMATRIX                g_World;
 XMMATRIX                g_View;
 XMMATRIX                g_Projection;
-
+XMVECTOR                g_LightPos;
 
 //--------------------------------------------------------------------------------------
 // Forward declarations
@@ -559,16 +559,16 @@ HRESULT InitDevice()
 		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0)},
 
 		//front
-        {XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
-        {XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
-        {XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
-        {XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
+        {XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
+        {XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
+        {XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
+        {XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
 
 		//back
-        {XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
-        {XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
-        {XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
-        {XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0)},
+        {XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
+        {XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
+        {XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
+        {XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0)},
 
 		//left
         {XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0)},
@@ -771,8 +771,9 @@ void Render()
     //
     ConstantBuffer cb;
 
-    cb.lightPos = XMVectorSet(2.0, 6.0, -1.0, 1.0);
+	g_LightPos = XMVectorSet(2.0, 3.0, -1.0, 1.0);
 
+	cb.lightPos = g_lightPos;
 	cb.mWorld = XMMatrixTranspose( g_World );
 	cb.mView = XMMatrixTranspose( g_View );
 	cb.mProjection = XMMatrixTranspose( g_Projection );
@@ -785,7 +786,6 @@ void Render()
 	g_pImmediateContext->VSSetConstantBuffers( 0, 1, &g_pConstantBuffer );
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
 	g_pImmediateContext->DrawIndexed( 36, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
-
 
     //
     // Present our back buffer to our front buffer
