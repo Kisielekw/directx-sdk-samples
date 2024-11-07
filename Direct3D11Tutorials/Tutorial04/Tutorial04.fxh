@@ -14,6 +14,7 @@ cbuffer ConstantBuffer : register( b0 )
 	matrix View;
 	matrix Projection;
 	float4 lightPos;
+    float4 eyePos;
 }
 
 //--------------------------------------------------------------------------------------
@@ -21,6 +22,14 @@ struct VS_OUTPUT
 {
     float4 Pos : SV_POSITION;
     float4 Color : COLOR0;
+};
+
+struct VS_OUTPUT_PS_LIGHT
+{
+    float4 Pos : SV_POSITION;
+    float4 Color : COLOR0;
+    float3 Normal : TEXCOORD0;
+    float3 PosWold : TEXCOORD1;
 };
 
 //--------------------------------------------------------------------------------------
@@ -46,8 +55,8 @@ VS_OUTPUT VS_Light(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : 
     float4 materialDiff = Color;
     float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
     float3 lightDir = normalize(lightPos.xyz - output.Pos.xyz);
-    float3 normal = normalize(mul(Normal.xyz, World));
-    float diff = max(0.0, dot(lightDir, normal));
+    
+    float diff = max(0.0, dot(lightDir, Normal));
 
     output.Pos = mul(output.Pos, View);
     output.Pos = mul(output.Pos, Projection);
@@ -56,6 +65,23 @@ VS_OUTPUT VS_Light(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : 
     return output;
 }
 
+VS_OUTPUT_PS_LIGHT VS_PSLight(float4 Pos : POSITION, float4 Color : COLOR, float3 Normal : Normal)
+{
+	VS_OUTPUT_PS_LIGHT output = (VS_OUTPUT_PS_LIGHT)0;
+
+    output.Pos = mul(Pos, World);
+
+	float3 normal = normalize(mul(Normal.xyz, World));
+
+    output.Pos = mul(output.Pos, View);
+    output.Pos = mul(output.Pos, Projection);
+
+    output.Color = Color;
+    output.Normal = normal;
+    output.PosWold = mul(Pos, World);
+
+    return output;
+}
 
 //--------------------------------------------------------------------------------------
 // Pixel Shader
@@ -65,3 +91,19 @@ float4 PS( VS_OUTPUT input ) : SV_Target
     return input.Color;
 }
 
+float4 PS_Light(VS_OUTPUT_PS_LIGHT input) : SV_Target
+{
+    float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
+    float4 materialDiff = input.Color;
+    float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
+    float3 lightDir = normalize(lightPos.xyz - input.PosWold.xyz);
+
+    float3 R = reflect(-lightDir, input.Normal);
+    float3 V = normalize(eyePos - input.PosWold.xyz);
+    float spec = max(0.0, dot(R, V));
+    float finalSpec = pow(spec, 30);
+
+    float diff = max(0.0, dot(lightDir, input.Normal));
+
+    return (materialAmbient + diff * materialDiff + finalSpec) * lightCol;
+}
