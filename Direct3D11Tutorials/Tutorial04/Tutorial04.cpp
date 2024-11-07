@@ -773,7 +773,7 @@ void Render()
 
 	g_LightPos = XMVectorSet(2.0, 3.0, -1.0, 1.0);
 
-	cb.lightPos = g_lightPos;
+	cb.lightPos = g_LightPos;
 	cb.mWorld = XMMatrixTranspose( g_World );
 	cb.mView = XMMatrixTranspose( g_View );
 	cb.mProjection = XMMatrixTranspose( g_Projection );
