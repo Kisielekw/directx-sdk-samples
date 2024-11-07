@@ -38,7 +38,8 @@ struct ConstantBuffer
 	XMMATRIX mWorld;
 	XMMATRIX mView;
 	XMMATRIX mProjection;
-    XMVECTOR lightPos;
+    XMVECTOR lightPos[3];
+    XMVECTOR lightCol[3];
 	XMVECTOR eyePos;
 };
 
@@ -72,7 +73,6 @@ ID3D11DepthStencilView*  g_pDepthStencilView = nullptr;
 XMMATRIX                g_World;
 XMMATRIX                g_View;
 XMMATRIX                g_Projection;
-XMVECTOR                g_LightPos;
 XMVECTOR                g_EyePos;
 
 //--------------------------------------------------------------------------------------
@@ -692,7 +692,7 @@ void Render()
     //
     // Animate the cube
     //
-    g_World = XMMatrixRotationY(t);
+    g_World = XMMatrixIdentity();
 
     //
     // Clear the back buffer
@@ -704,9 +704,13 @@ void Render()
     //
     ConstantBuffer cb;
 
-	g_LightPos = XMVectorSet(0.0, 3.0, 3.0, 1.0);
+    cb.lightPos[0] = XMVectorSet(3.0f * sinf(t + 2 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 2 * 3.1416 / 3), 0.0f);
+	cb.lightPos[1] = XMVectorSet(3.0f * sinf(t + 4 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 4 * 3.1416 / 3), 0.0f);
+	cb.lightPos[2] = XMVectorSet(3.0f * sinf(t + 6 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 6 * 3.1416 / 3), 0.0f);
 
-	cb.lightPos = g_LightPos;
+    cb.lightCol[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
+    cb.lightCol[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+    cb.lightCol[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
 
 	cb.eyePos = g_EyePos;
 
@@ -724,6 +728,16 @@ void Render()
     g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	g_pImmediateContext->DrawIndexed( 36, 0, 0 );        // 36 vertices needed for 12 triangles in a triangle list
 
+	g_World = XMMatrixRotationY(t) * XMMatrixTranslation(0.0f, 2.0f, 5.0f);
+
+    cb.mWorld = XMMatrixTranspose(g_World);
+
+    g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb, 0, 0);
+    g_pImmediateContext->VSSetShader(g_pVertexShaderPSLight, nullptr, 0);
+    g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+    g_pImmediateContext->PSSetShader(g_pPixelShaderPSLight, nullptr, 0);
+    g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+    g_pImmediateContext->DrawIndexed(36, 0, 0);
     //
     // Present our back buffer to our front buffer
     //

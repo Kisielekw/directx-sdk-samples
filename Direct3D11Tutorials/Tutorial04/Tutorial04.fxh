@@ -13,7 +13,8 @@ cbuffer ConstantBuffer : register( b0 )
 	matrix World;
 	matrix View;
 	matrix Projection;
-	float4 lightPos;
+	float4 lightPos[3];
+    float4 lightCol[3];
     float4 eyePos;
 }
 
@@ -54,7 +55,7 @@ VS_OUTPUT VS_Light(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : 
     float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
     float4 materialDiff = Color;
     float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
-    float3 lightDir = normalize(lightPos.xyz - output.Pos.xyz);
+    float3 lightDir = normalize(lightPos[0].xyz - output.Pos.xyz);
     
     float diff = max(0.0, dot(lightDir, Normal));
 
@@ -94,16 +95,23 @@ float4 PS( VS_OUTPUT input ) : SV_Target
 float4 PS_Light(VS_OUTPUT_PS_LIGHT input) : SV_Target
 {
     float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
-    float4 materialDiff = input.Color;
-    float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
-    float3 lightDir = normalize(lightPos.xyz - input.PosWold.xyz);
 
-    float3 R = reflect(-lightDir, input.Normal);
-    float3 V = normalize(eyePos - input.PosWold.xyz);
-    float spec = max(0.0, dot(R, V));
-    float finalSpec = pow(spec, 30);
+    float4 finalLight = float4(0, 0, 0, 0);
 
-    float diff = max(0.0, dot(lightDir, input.Normal));
+    for (int i = 0; i < 3; i++)
+    {
+        float4 lightColor = lightCol[i];
+        float3 lightDir = normalize(lightPos[i].xyz - input.PosWold.xyz);
 
-    return (materialAmbient + diff * materialDiff + finalSpec) * lightCol;
+        float3 R = reflect(-lightDir, input.Normal);
+        float3 V = normalize(eyePos - input.PosWold.xyz);
+        float spec = max(0.0, dot(R, V));
+        float finalSpec = pow(spec, 30);
+
+        float diff = max(0.0, dot(lightDir, input.Normal));
+
+        finalLight += (diff + finalSpec) * lightColor;
+    }
+
+    return  finalLight * input.Color;
 }
