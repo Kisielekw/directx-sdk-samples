@@ -443,7 +443,7 @@ HRESULT InitDevice()
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	UINT numElements = ARRAYSIZE( layout );
 
@@ -488,42 +488,42 @@ HRESULT InitDevice()
 
 	// Create vertex buffer
 	SimpleVertex vertices[]{
-		//Position					Color								Normal
+		//Position					Color								Normal						TexCoord
 		//up
-		{XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0), XMFLOAT2(1, 1)},
-		{XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0), XMFLOAT2(0, 0)},
-		{XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0), XMFLOAT2(1, 0)},
-		{XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0), XMFLOAT2(0, 1)},
+		{XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0),	XMFLOAT2(1, 1)},
+		{XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0),	XMFLOAT2(1, 0)},
+		{XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0),	XMFLOAT2(0, 0)},
+		{XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 1.0, 0.0),	XMFLOAT2(0, 1)},
 
 		//down
-		{XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0), XMFLOAT2(1, 0)},
-		{XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0), XMFLOAT2(1, 1)},
-		{XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0), XMFLOAT2(0, 1)},
-		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0), XMFLOAT2(0, 0)},
+		{XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0),	XMFLOAT2(1, 0)},
+		{XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0),	XMFLOAT2(1, 1)},
+		{XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0),	XMFLOAT2(0, 1)},
+		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, -1.0, 0.0),	XMFLOAT2(0, 0)},
 
 		//front
-		{XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0), XMFLOAT2(0, 0)},
-		{XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0), XMFLOAT2(1, 0)},
-		{XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0), XMFLOAT2(0, 1)},
-		{XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0), XMFLOAT2(1, 1)},
+		{XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0),	XMFLOAT2(1, 0)},
+		{XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0),	XMFLOAT2(0, 0)},
+		{XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0),	XMFLOAT2(0, 1)},
+		{XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, 1.0),	XMFLOAT2(1, 1)},
 
 		//back
-		{XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0), XMFLOAT2(1, 0)},
-		{XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0), XMFLOAT2(0, 0)},
-		{XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0), XMFLOAT2(0, 1)},
-		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0), XMFLOAT2(1, 1)},
+		{XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0),	XMFLOAT2(0, 0)},
+		{XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0),	XMFLOAT2(1, 0)},
+		{XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0),	XMFLOAT2(1, 1)},
+		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(0.0, 0.0, -1.0),	XMFLOAT2(0, 1)},
 
 		//left
-		{XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0), XMFLOAT2(0, 0)},
-		{XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0), XMFLOAT2(1, 0)},
-		{XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0), XMFLOAT2(0, 1)},
-		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0), XMFLOAT2(1, 1)},
+		{XMFLOAT3(-1.0, 1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0),	XMFLOAT2(1, 0)},
+		{XMFLOAT3(-1.0, 1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0),	XMFLOAT2(0, 0)},
+		{XMFLOAT3(-1.0, -1.0, 1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0),	XMFLOAT2(1, 1)},
+		{XMFLOAT3(-1.0, -1.0, -1.0),XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(-1.0, 0.0, 0.0),	XMFLOAT2(0, 1)},
 
 		//right
-		{XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0), XMFLOAT2(1, 0)},
-		{XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0), XMFLOAT2(0, 0)},
-		{XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0), XMFLOAT2(1, 1)},
-		{XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0), XMFLOAT2(0, 1)}
+		{XMFLOAT3(1.0, 1.0, 1.0),   XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0),	XMFLOAT2(0, 0)},
+		{XMFLOAT3(1.0, 1.0, -1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0),	XMFLOAT2(1, 0)},
+		{XMFLOAT3(1.0, -1.0, 1.0),  XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0),	XMFLOAT2(0, 1)},
+		{XMFLOAT3(1.0, -1.0, -1.0), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),   XMFLOAT3(1.0, 0.0, 0.0),	XMFLOAT2(1, 1)}
 
 	};
 
