@@ -94,7 +94,7 @@ float4 PS( VS_OUTPUT input ) : SV_Target
 
 float4 PS_Light(VS_OUTPUT_PS_LIGHT input) : SV_Target
 {
-    float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
+	float4 finalLight = float4(0.1f, 0.1f, 0.1f, 1.0);
 
     float4 finalLight = float4(0, 0, 0, 0);
 
@@ -110,7 +110,7 @@ float4 PS_Light(VS_OUTPUT_PS_LIGHT input) : SV_Target
 
         float diff = max(0.0, dot(lightDir, input.Normal));
 
-        finalLight += (diff + finalSpec) * lightColor;
+		finalLight += (diff * float4(0.9, 0.9, 0.9, 1.0) + finalSpec * float4(0.3, 0.3, 0.3, 1.0)) * lightColor;
     }
 
     return  finalLight * input.Color;
