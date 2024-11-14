@@ -19,60 +19,29 @@ cbuffer ConstantBuffer : register( b0 )
 }
 
 //--------------------------------------------------------------------------------------
+
 struct VS_OUTPUT
 {
 	float4 Pos : SV_POSITION;
-	float4 Color : COLOR0;
-};
-
-struct VS_OUTPUT_PS_LIGHT
-{
-	float4 Pos : SV_POSITION;
-	float4 Color : COLOR0;
 	float3 Normal : TEXCOORD0;
 	float3 PosWold : TEXCOORD1;
     float2 TexCoord : TEXCOORD2;
+	float3 Tangent : TEXCOORD3;
+	float3 Binormal : TEXCOORD4;
 };
 
-Texture2D txWoodColor : register( t0 );
-SamplerState txWoodSampler : register( s0 );
+Texture2D txColor : register( t0 );
+Texture2D txNormal : register( t1 );
+Texture2D txHight : register( t2 );
+SamplerState txSampler : register( s0 );
 
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
-VS_OUTPUT VS( float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal )
+
+VS_OUTPUT VS(float4 Pos : POSITION, float3 Normal : NORMAL, float2 TexCoord : TEXCOORD, float3 Tangent : TANGENT, float3 Binormal : BINORMAL)
 {
 	VS_OUTPUT output = (VS_OUTPUT)0;
-	output.Pos = mul( Pos, World );
-	output.Pos = mul( output.Pos, View );
-	output.Pos = mul( output.Pos, Projection );
-	output.Color = Color;
-	return output;
-}
-
-VS_OUTPUT VS_Light(float4 Pos : POSITION, float4 Color : COLOR, float4 Normal : Normal)
-{
-	VS_OUTPUT output = (VS_OUTPUT)0;
-	
-	output.Pos = mul(Pos, World);
-
-	float4 materialAmbient = float4(0.1, 0.1, 0.1, 1.0);
-	float4 materialDiff = Color;
-	float4 lightCol = float4(1.0, 1.0, 1.0, 1.0);
-	float3 lightDir = normalize(lightPos[0].xyz - output.Pos.xyz);
-	
-	float diff = max(0.0, dot(lightDir, Normal));
-
-	output.Pos = mul(output.Pos, View);
-	output.Pos = mul(output.Pos, Projection);
-
-	output.Color = (materialAmbient + diff * materialDiff) * lightCol;
-	return output;
-}
-
-VS_OUTPUT_PS_LIGHT VS_PSLight(float4 Pos : POSITION, float4 Color : COLOR, float3 Normal : Normal, float2 TexCoord : TEXCOORD)
-{
-	VS_OUTPUT_PS_LIGHT output = (VS_OUTPUT_PS_LIGHT)0;
 
 	output.Pos = mul(Pos, World);
 
@@ -80,11 +49,12 @@ VS_OUTPUT_PS_LIGHT VS_PSLight(float4 Pos : POSITION, float4 Color : COLOR, float
 
 	output.Pos = mul(output.Pos, View);
 	output.Pos = mul(output.Pos, Projection);
-
-	output.Color = Color;
+	
 	output.Normal = normal;
 	output.PosWold = mul(Pos, World);
 	output.TexCoord = TexCoord;
+	output.Tangent = Tangent;
+	output.Binormal = Binormal;
 
 	return output;
 }
@@ -92,15 +62,10 @@ VS_OUTPUT_PS_LIGHT VS_PSLight(float4 Pos : POSITION, float4 Color : COLOR, float
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
-float4 PS( VS_OUTPUT input ) : SV_Target
-{
-	return input.Color;
-}
-
-float4 PS_Light(VS_OUTPUT_PS_LIGHT input) : SV_Target
+float4 PS(VS_OUTPUT input) : SV_Target
 {
 	float4 finalLight = float4(0.1f, 0.1f, 0.1f, 1.0);
-	float4 woodColor = txWoodColor.Sample(txWoodSampler, input.TexCoord);
+	float4 woodColor = txColor.Sample(txSampler, input.TexCoord);
 
 	for (int i = 0; i < 3; i++)
 	{
