@@ -41,8 +41,8 @@ struct ConstantBuffer
 	XMMATRIX mWorld;
 	XMMATRIX mView;
 	XMMATRIX mProjection;
-	XMVECTOR lightPos[3];
-	XMVECTOR lightCol[3];
+	XMVECTOR lightPos;
+	XMVECTOR lightCol;
 	XMVECTOR eyePos;
 };
 
@@ -560,9 +560,9 @@ HRESULT InitDevice()
 	g_World = XMMatrixIdentity();
 
 	// Initialize the view matrix
-	g_EyePos = XMVectorSet( 0.0f, 5.0f, -4.0f, 0.0f );
+	g_EyePos = XMVectorSet( 0.0f, 2.0f, 0.0f, 0.0f );
 	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
-	XMVECTOR Up = XMVectorSet( 0.0f, 1.0f, 0.0f, 0.0f );
+	XMVECTOR Up = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
 	g_View = XMMatrixLookAtLH( g_EyePos, At, Up );
 
 	// Initialize the projection matrix
@@ -572,13 +572,13 @@ HRESULT InitDevice()
 	if (FAILED(hr))
 		return hr;
 
-	hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockNormal.bmp", nullptr, &g_normal_TextureRV);
+	hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockNormal.DDS", nullptr, &g_normal_TextureRV);
 	if (FAILED(hr))
 		return hr;
 
-	hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockheight.tga", nullptr, &g_height_TextureRV);
-	if (FAILED(hr))
-		return hr;
+	//hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockheight.tga", nullptr, &g_height_TextureRV);
+	//if (FAILED(hr))
+	//	return hr;
 
 	D3D11_SAMPLER_DESC sampleDesc;
 	ZeroMemory(&sampleDesc, sizeof(sampleDesc));
@@ -694,13 +694,7 @@ void Render()
 	//
 	ConstantBuffer cb;
 
-	cb.lightPos[0] = XMVectorSet(3.0f * sinf(t + 2 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 2 * 3.1416 / 3), 0.0f);
-	cb.lightPos[1] = XMVectorSet(3.0f * sinf(t + 4 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 4 * 3.1416 / 3), 0.0f);
-	cb.lightPos[2] = XMVectorSet(3.0f * sinf(t + 6 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 6 * 3.1416 / 3), 0.0f);
-
-	cb.lightCol[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 1.0f);
-	cb.lightCol[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
-	cb.lightCol[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 1.0f);
+	cb.lightPos = XMVectorSet(3.0f * sinf(t + 2 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 2 * 3.1416 / 3), 0.0f);
 
 	cb.eyePos = g_EyePos;
 
