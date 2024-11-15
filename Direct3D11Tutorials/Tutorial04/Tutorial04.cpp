@@ -50,26 +50,28 @@ struct ConstantBuffer
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
-HINSTANCE				g_hInst = nullptr;
+HINSTANCE					g_hInst = nullptr;
 HWND						g_hWnd = nullptr;
-D3D_DRIVER_TYPE			g_driverType = D3D_DRIVER_TYPE_NULL;
+D3D_DRIVER_TYPE				g_driverType = D3D_DRIVER_TYPE_NULL;
 D3D_FEATURE_LEVEL			g_featureLevel = D3D_FEATURE_LEVEL_11_0;
-ID3D11RasterizerState*	g_rasterState = nullptr;
+ID3D11RasterizerState*		g_rasterState = nullptr;
 ID3D11Device*				g_pd3dDevice = nullptr;
-ID3D11Device1*			g_pd3dDevice1 = nullptr;
+ID3D11Device1*				g_pd3dDevice1 = nullptr;
 ID3D11DeviceContext*		g_pImmediateContext = nullptr;
 ID3D11DeviceContext1*		g_pImmediateContext1 = nullptr;
-IDXGISwapChain*			g_pSwapChain = nullptr;
+IDXGISwapChain*				g_pSwapChain = nullptr;
 IDXGISwapChain1*			g_pSwapChain1 = nullptr;
-ID3D11RenderTargetView*	g_pRenderTargetView = nullptr;
-ID3D11VertexShader*		g_pVertexShaderPSLight = nullptr;
-ID3D11PixelShader*		g_pPixelShaderPSLight = nullptr;
-ID3D11InputLayout*		g_pVertexLayout = nullptr;
+ID3D11RenderTargetView*		g_pRenderTargetView = nullptr;
+ID3D11VertexShader*			g_pVertexShaderPSLight = nullptr;
+ID3D11VertexShader*			g_pVertexShaderPSLightLight = nullptr;
+ID3D11PixelShader*			g_pPixelShaderPSLight = nullptr;
+ID3D11PixelShader*			g_pPixelShaderPSLightLight = nullptr;
+ID3D11InputLayout*			g_pVertexLayout = nullptr;
 ID3D11Buffer*				g_pVertexBuffer = nullptr;
 ID3D11Buffer*				g_pIndexBuffer = nullptr;
 ID3D11Buffer*				g_pConstantBuffer = nullptr;
 ID3D11Texture2D*			g_pDepthStencil = nullptr;
-ID3D11DepthStencilView*	g_pDepthStencilView = nullptr;
+ID3D11DepthStencilView*		g_pDepthStencilView = nullptr;
 XMMATRIX					g_World;
 XMMATRIX					g_View;
 XMMATRIX					g_Projection;
@@ -78,7 +80,7 @@ XMVECTOR					g_EyePos;
 ID3D11ShaderResourceView*	g_color_TextureRV = nullptr;
 ID3D11ShaderResourceView*	g_normal_TextureRV = nullptr;
 ID3D11ShaderResourceView*	g_height_TextureRV = nullptr;
-ID3D11SamplerState*		g_texture_Sampler = nullptr;
+ID3D11SamplerState*			g_texture_Sampler = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Forward declarations
@@ -406,6 +408,22 @@ HRESULT InitDevice()
 		return hr;
 	}
 
+	hr = CompileShaderFromFile(L"Tutorial04.fxh", "VS_Light", "vs_4_0", &pVSBlob);
+	if (FAILED(hr))
+	{
+		MessageBox(nullptr,
+			L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK);
+		return hr;
+	}
+
+	// Create the vertex shader
+	hr = g_pd3dDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &g_pVertexShaderPSLightLight);
+	if (FAILED(hr))
+	{
+		pVSBlob->Release();
+		return hr;
+	}
+
 	// Define the input layout
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
@@ -438,6 +456,19 @@ HRESULT InitDevice()
 	}
 
 	hr = g_pd3dDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShaderPSLight );
+	pPSBlob->Release();
+	if( FAILED( hr ) )
+		return hr;
+
+	hr = CompileShaderFromFile( L"Tutorial04.fxh", "PS_Light", "ps_4_0", &pPSBlob );
+	if( FAILED( hr ) )
+	{
+		MessageBox( nullptr,
+					L"The FX file cannot be compiled.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK );
+		return hr;
+	}
+
+	hr = g_pd3dDevice->CreatePixelShader( pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pPixelShaderPSLightLight );
 	pPSBlob->Release();
 	if( FAILED( hr ) )
 		return hr;
@@ -560,7 +591,7 @@ HRESULT InitDevice()
 	g_World = XMMatrixIdentity();
 
 	// Initialize the view matrix
-	g_EyePos = XMVectorSet( 0.0f, 2.0f, 0.0f, 0.0f );
+	g_EyePos = XMVectorSet( 0.0f, 3.0f, 0.0f, 0.0f );
 	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
 	XMVECTOR Up = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
 	g_View = XMMatrixLookAtLH( g_EyePos, At, Up );
@@ -576,9 +607,9 @@ HRESULT InitDevice()
 	if (FAILED(hr))
 		return hr;
 
-	//hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockheight.tga", nullptr, &g_height_TextureRV);
-	//if (FAILED(hr))
-	//	return hr;
+	hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockheight.DDS", nullptr, &g_height_TextureRV);
+	if (FAILED(hr))
+		return hr;
 
 	D3D11_SAMPLER_DESC sampleDesc;
 	ZeroMemory(&sampleDesc, sizeof(sampleDesc));
@@ -607,7 +638,9 @@ void CleanupDevice()
 	if (g_pIndexBuffer) g_pIndexBuffer->Release();
 	if (g_pVertexLayout) g_pVertexLayout->Release();
 	if (g_pVertexShaderPSLight) g_pVertexShaderPSLight->Release();
+	if (g_pVertexShaderPSLightLight) g_pVertexShaderPSLightLight->Release();
 	if (g_pPixelShaderPSLight) g_pPixelShaderPSLight->Release();
+	if (g_pPixelShaderPSLightLight) g_pPixelShaderPSLightLight->Release();
 	if (g_pRenderTargetView) g_pRenderTargetView->Release();
 	if (g_pSwapChain1) g_pSwapChain1->Release();
 	if (g_pSwapChain) g_pSwapChain->Release();
@@ -712,14 +745,14 @@ void Render()
 	g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	g_pImmediateContext->DrawIndexed( 36, 0, 0 );
 
-	g_World = XMMatrixRotationY(t) * XMMatrixTranslation(0.0f, 2.0f, 5.0f);
+	g_World = XMMatrixScaling(0.3f, 0.3f, 0.3f) * XMMatrixTranslationFromVector(cb.lightPos);
 
 	cb.mWorld = XMMatrixTranspose(g_World);
 
 	g_pImmediateContext->UpdateSubresource(g_pConstantBuffer, 0, nullptr, &cb, 0, 0);
-	g_pImmediateContext->VSSetShader(g_pVertexShaderPSLight, nullptr, 0);
+	g_pImmediateContext->VSSetShader(g_pVertexShaderPSLightLight, nullptr, 0);
 	g_pImmediateContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-	g_pImmediateContext->PSSetShader(g_pPixelShaderPSLight, nullptr, 0);
+	g_pImmediateContext->PSSetShader(g_pPixelShaderPSLightLight, nullptr, 0);
 	g_pImmediateContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 	g_pImmediateContext->DrawIndexed(36, 0, 0);
 

@@ -32,10 +32,9 @@ struct PS_OUTPUT
 {
 	float4 Pos				: SV_POSITION;
 	float3 Normal			: TEXCOORD0;
-	float3 PosWold			: TEXCOORD1;
-    float2 TexCoord			: TEXCOORD2;
-	float3 ViewDirInTang	: TEXCOORD3;
-	float3 LightDirInTang	: TEXCOORD4;
+    float2 TexCoord			: TEXCOORD1;
+	float3 ViewDirInTang	: TEXCOORD2;
+	float3 LightDirInTang	: TEXCOORD3;
 };
 
 Texture2D txColor		: register( t0 );
@@ -64,8 +63,8 @@ PS_OUTPUT VS(VS_INPUT input)
 
 	float3x3 mat2Tang = float3x3(T, B, N);
 
-	output.ViewDirInTang = mul(mat2Tang, viewDirW);
-	output.LightDirInTang = mul(mat2Tang, lightDirW);
+	output.ViewDirInTang = normalize(mul(mat2Tang, viewDirW));
+	output.LightDirInTang = normalize(mul(mat2Tang, lightDirW));
 
 	output.TexCoord = input.TexCoord;
 
@@ -77,8 +76,19 @@ PS_OUTPUT VS(VS_INPUT input)
 	//output.Pos = mul(output.Pos, Projection);
 	//
 	//output.Normal = Normal;
-	output.PosWold = mul(input.Pos, World);
+	//output.PosWold = mul(input.Pos, World);
 	//output.TexCoord = input.TexCoord;
+
+	return output;
+}
+
+PS_OUTPUT VS_Light(VS_INPUT input)
+{
+	PS_OUTPUT output = (PS_OUTPUT)0;
+
+	output.Pos = mul(input.Pos, World);
+	output.Pos = mul(output.Pos, View);
+	output.Pos = mul(output.Pos, Projection);
 
 	return output;
 }
@@ -89,18 +99,28 @@ PS_OUTPUT VS(VS_INPUT input)
 float4 PS(PS_OUTPUT input) : SV_Target
 {
 	float4 finalLight = float4(0.1f, 0.1f, 0.1f, 1.0);
-	float4 stoneColor = txColor.Sample(txSampler, input.TexCoord);
-	float4 stoneNormal = txNormal.Sample(txSampler, input.TexCoord);
-	float3 N = normalize(stoneNormal.xyz);
+	float4 stoneColor = txColor.Sample(txSampler, input.TexCoord).r;
+	float4 stoneHight = txHight.Sample(txSampler, input.TexCoord).r;
+	
+	float dx = ddx(stoneHight);
+	float dy = ddy(stoneHight);
+	float3 N = normalize(float3(-dx, -dy, 0.2));
 
+	// float3 N = normalize(mul(2.0 * stoneNormal - 1, World)).xyz;
 
 	float3 R = reflect(-input.LightDirInTang, N);
-	float spec = max(0.0, dot(R, input.ViewDirInTang));
+	float3 V = input.ViewDirInTang;
+	float spec = max(0, dot(R, V));
 	float finalSpec = pow(spec, 30);
 
 	float diff = max(0.0, dot(input.LightDirInTang, N));
 
-	finalLight += (diff * float4(0.5, 0.5, 0.5, 1.0) + finalSpec * float4(0.3, 0.3, 0.3, 1.0));
+	finalLight += (diff * float4(1.0, 1.0, 1.0, 1.0)) + (finalSpec * float4(1.0, 1.0, 1.0, 1.0));
 
-	return diff * float4(0.9, 0.9, 0.9, 1.0) * stoneColor;
+	return  finalLight* stoneColor;
+}
+
+float4 PS_Light(PS_OUTPUT input) : SV_Target
+{
+	return float4(1.0, 1.0, 1.0, 1.0);
 }
