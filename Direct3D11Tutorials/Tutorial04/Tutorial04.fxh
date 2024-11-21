@@ -96,17 +96,39 @@ PS_OUTPUT VS_Light(VS_INPUT input)
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
+float2 RayMarching(float2 startTexCoord, float vewDir)
+{
+	float3 invV = -vewDir;
+    float stepSize = 0.001f;
+    float maxBumpHeight = 10.0f;
+
+    float3 P0 = float3(startTexCoord, maxBumpHeight);
+    float H0 = maxBumpHeight * txHight.Sample(txSampler, P0.xy).r;
+
+    for (int i = 0; i < 100; i++)
+    {
+	    if(P0.z > H0)
+	    {
+		    P0 += stepSize * invV;
+            H0 = maxBumpHeight * txHight.Sample(txSampler, P0.xy).r;
+        }
+        else
+			break;
+    }
+
+	return P0.xy;
+}
+
 float4 PS(PS_OUTPUT input) : SV_Target
 {
 	float4 finalLight = float4(0.1f, 0.1f, 0.1f, 1.0);
-	float4 stoneColor = txColor.Sample(txSampler, input.TexCoord).r;
-	float4 stoneHight = txHight.Sample(txSampler, input.TexCoord).r;
-	
-	float dx = ddx(stoneHight);
-	float dy = ddy(stoneHight);
-	float3 N = normalize(float3(-dx, -dy, 0.2));
 
-	// float3 N = normalize(mul(2.0 * stoneNormal - 1, World)).xyz;
+    float2 TexCorrected = RayMarching(input.TexCoord, input.ViewDirInTang);
+
+    float4 stoneColor = txColor.Sample(txSampler, TexCorrected);
+    float4 stoneNormal = txNormal.Sample(txSampler, TexCorrected);
+
+	float3 N = normalize(mul(stoneNormal, World)).xyz;
 
 	float3 R = reflect(-input.LightDirInTang, N);
 	float3 V = input.ViewDirInTang;
@@ -117,7 +139,7 @@ float4 PS(PS_OUTPUT input) : SV_Target
 
 	finalLight += (diff * float4(1.0, 1.0, 1.0, 1.0)) + (finalSpec * float4(1.0, 1.0, 1.0, 1.0));
 
-	return  finalLight* stoneColor;
+	return  stoneColor;
 }
 
 float4 PS_Light(PS_OUTPUT input) : SV_Target

@@ -18,6 +18,7 @@
 #include <d3dcompiler.h>
 #include <directxmath.h>
 #include <directxcolors.h>
+#include <cmath>
 #include "resource.h"
 #include "DDSTextureLoader.h"
 
@@ -50,28 +51,28 @@ struct ConstantBuffer
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
-HINSTANCE					g_hInst = nullptr;
+HINSTANCE				g_hInst = nullptr;
 HWND						g_hWnd = nullptr;
-D3D_DRIVER_TYPE				g_driverType = D3D_DRIVER_TYPE_NULL;
+D3D_DRIVER_TYPE			g_driverType = D3D_DRIVER_TYPE_NULL;
 D3D_FEATURE_LEVEL			g_featureLevel = D3D_FEATURE_LEVEL_11_0;
-ID3D11RasterizerState*		g_rasterState = nullptr;
+ID3D11RasterizerState*	g_rasterState = nullptr;
 ID3D11Device*				g_pd3dDevice = nullptr;
-ID3D11Device1*				g_pd3dDevice1 = nullptr;
+ID3D11Device1*			g_pd3dDevice1 = nullptr;
 ID3D11DeviceContext*		g_pImmediateContext = nullptr;
 ID3D11DeviceContext1*		g_pImmediateContext1 = nullptr;
-IDXGISwapChain*				g_pSwapChain = nullptr;
+IDXGISwapChain*			g_pSwapChain = nullptr;
 IDXGISwapChain1*			g_pSwapChain1 = nullptr;
-ID3D11RenderTargetView*		g_pRenderTargetView = nullptr;
-ID3D11VertexShader*			g_pVertexShaderPSLight = nullptr;
-ID3D11VertexShader*			g_pVertexShaderPSLightLight = nullptr;
-ID3D11PixelShader*			g_pPixelShaderPSLight = nullptr;
-ID3D11PixelShader*			g_pPixelShaderPSLightLight = nullptr;
-ID3D11InputLayout*			g_pVertexLayout = nullptr;
+ID3D11RenderTargetView*	g_pRenderTargetView = nullptr;
+ID3D11VertexShader*		g_pVertexShaderPSLight = nullptr;
+ID3D11VertexShader*		g_pVertexShaderPSLightLight = nullptr;
+ID3D11PixelShader*		g_pPixelShaderPSLight = nullptr;
+ID3D11PixelShader*		g_pPixelShaderPSLightLight = nullptr;
+ID3D11InputLayout*		g_pVertexLayout = nullptr;
 ID3D11Buffer*				g_pVertexBuffer = nullptr;
 ID3D11Buffer*				g_pIndexBuffer = nullptr;
 ID3D11Buffer*				g_pConstantBuffer = nullptr;
 ID3D11Texture2D*			g_pDepthStencil = nullptr;
-ID3D11DepthStencilView*		g_pDepthStencilView = nullptr;
+ID3D11DepthStencilView*	g_pDepthStencilView = nullptr;
 XMMATRIX					g_World;
 XMMATRIX					g_View;
 XMMATRIX					g_Projection;
@@ -80,7 +81,7 @@ XMVECTOR					g_EyePos;
 ID3D11ShaderResourceView*	g_color_TextureRV = nullptr;
 ID3D11ShaderResourceView*	g_normal_TextureRV = nullptr;
 ID3D11ShaderResourceView*	g_height_TextureRV = nullptr;
-ID3D11SamplerState*			g_texture_Sampler = nullptr;
+ID3D11SamplerState*		g_texture_Sampler = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Forward declarations
@@ -590,12 +591,6 @@ HRESULT InitDevice()
 	// Initialize the world matrix
 	g_World = XMMatrixIdentity();
 
-	// Initialize the view matrix
-	g_EyePos = XMVectorSet( 0.0f, 3.0f, 0.0f, 0.0f );
-	XMVECTOR At = XMVectorSet( 0.0f, 0.0f, 0.0f, 0.0f );
-	XMVECTOR Up = XMVectorSet( 0.0f, 0.0f, 1.0f, 0.0f );
-	g_View = XMMatrixLookAtLH( g_EyePos, At, Up );
-
 	// Initialize the projection matrix
 	g_Projection = XMMatrixPerspectiveFovLH( XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f );
 
@@ -607,7 +602,7 @@ HRESULT InitDevice()
 	if (FAILED(hr))
 		return hr;
 
-	hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockheight.DDS", nullptr, &g_height_TextureRV);
+	hr = CreateDDSTextureFromFile(g_pd3dDevice, L"rockheight.dds", nullptr, &g_height_TextureRV);
 	if (FAILED(hr))
 		return hr;
 
@@ -631,27 +626,27 @@ HRESULT InitDevice()
 //--------------------------------------------------------------------------------------
 void CleanupDevice()
 {
-	if( g_pImmediateContext ) g_pImmediateContext->ClearState();
+	if( g_pImmediateContext )			g_pImmediateContext->ClearState();
 
-	if (g_pConstantBuffer) g_pConstantBuffer->Release();
-	if (g_pVertexBuffer) g_pVertexBuffer->Release();
-	if (g_pIndexBuffer) g_pIndexBuffer->Release();
-	if (g_pVertexLayout) g_pVertexLayout->Release();
-	if (g_pVertexShaderPSLight) g_pVertexShaderPSLight->Release();
-	if (g_pVertexShaderPSLightLight) g_pVertexShaderPSLightLight->Release();
-	if (g_pPixelShaderPSLight) g_pPixelShaderPSLight->Release();
-	if (g_pPixelShaderPSLightLight) g_pPixelShaderPSLightLight->Release();
-	if (g_pRenderTargetView) g_pRenderTargetView->Release();
-	if (g_pSwapChain1) g_pSwapChain1->Release();
-	if (g_pSwapChain) g_pSwapChain->Release();
-	if (g_pImmediateContext1) g_pImmediateContext1->Release();
-	if (g_pImmediateContext) g_pImmediateContext->Release();
-	if (g_pd3dDevice1) g_pd3dDevice1->Release();
-	if (g_pd3dDevice) g_pd3dDevice->Release();
-	if (g_texture_Sampler)g_texture_Sampler->Release();
-	if (g_color_TextureRV)g_color_TextureRV->Release();
-	if (g_normal_TextureRV)g_normal_TextureRV->Release();
-	if (g_height_TextureRV)g_height_TextureRV->Release();
+	if (g_pConstantBuffer)			g_pConstantBuffer->Release();
+	if (g_pVertexBuffer)				g_pVertexBuffer->Release();
+	if (g_pIndexBuffer)				g_pIndexBuffer->Release();
+	if (g_pVertexLayout)				g_pVertexLayout->Release();
+	if (g_pVertexShaderPSLight)		g_pVertexShaderPSLight->Release();
+	if (g_pVertexShaderPSLightLight)	g_pVertexShaderPSLightLight->Release();
+	if (g_pPixelShaderPSLight)			g_pPixelShaderPSLight->Release();
+	if (g_pPixelShaderPSLightLight)	g_pPixelShaderPSLightLight->Release();
+	if (g_pRenderTargetView)			g_pRenderTargetView->Release();
+	if (g_pSwapChain1)				g_pSwapChain1->Release();
+	if (g_pSwapChain)					g_pSwapChain->Release();
+	if (g_pImmediateContext1)			g_pImmediateContext1->Release();
+	if (g_pImmediateContext)			g_pImmediateContext->Release();
+	if (g_pd3dDevice1)				g_pd3dDevice1->Release();
+	if (g_pd3dDevice)					g_pd3dDevice->Release();
+	if (g_texture_Sampler)			g_texture_Sampler->Release();
+	if (g_color_TextureRV)			g_color_TextureRV->Release();
+	if (g_normal_TextureRV)			g_normal_TextureRV->Release();
+	if (g_height_TextureRV)			g_height_TextureRV->Release();
 }
 
 
@@ -727,7 +722,13 @@ void Render()
 	//
 	ConstantBuffer cb;
 
-	cb.lightPos = XMVectorSet(3.0f * sinf(t + 2 * 3.1416 / 3), 3.0f, 3.0f * cosf(t + 2 * 3.1416 / 3), 0.0f);
+	cb.lightPos = XMVectorSet(3.0f * sinf(t), 3.0f, 3.0f * cosf(t), 0.0f);
+
+	// Initialize the view matrix
+	g_EyePos = XMVectorSet(0.0f, 1.0f * abs(cosf(t / 5)) + 1, -1.0f * abs(sinf(t / 5)), 0.0f);
+	XMVECTOR At = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMVECTOR Up = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	g_View = XMMatrixLookAtLH(g_EyePos, At, Up);
 
 	cb.eyePos = g_EyePos;
 
